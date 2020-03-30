@@ -43,27 +43,21 @@ public class Pvp extends Plugin{
                 Call.sendMessage("[scarlet]ALERT![] " + ((Player)event.builder).name + " has begun building a reactor at " + event.tile.x + ", " + event.tile.y);
             }
         });*/
-        Events.on(ServerLoadEvent.class,e-> updateState(null,false));
-        Events.on(WaveEvent.class,e-> updateState(null,false));
-        Events.on(WorldLoadEvent.class,e-> updateState(null,false));
-        Events.on(PlayerLeave.class,e-> updateState(e.player,false));
-        Events.on(PlayerConnect.class,e-> updateState(e.player,true));
-
+        Events.on(ServerLoadEvent.class,e-> updateState(null));
+        Events.on(WaveEvent.class,e-> updateState(null));
+        Events.on(PlayerConnect.class,e-> updateState(e.player));
 
     }
-    public void updateState(Player player,boolean conected){
+    public void updateState(Player player){
         ArrayList<Player> players=new ArrayList<>();
         for(Player p:playerGroup){
             players.add(p);
         }
         if(player!=null) {
-            if (conected) {
-                players.add(player);
-                Log.info("con");
-
-            }else {
+            if (player.con.hasDisconnected) {
                 players.remove(player);
-                Log.info("dis");
+            }else {
+                players.add(player);
             }
         }
         int teamCount=0;
@@ -72,6 +66,18 @@ public class Pvp extends Plugin{
             if(p.getTeam()==prevTeam){
                 continue;
             }
+			// identify red team bug issue and execute team command next wave, worst fix by Neba
+			if(p.getTeam()==Team.crux){
+				int i = p.getTeam().id + 1;
+                while (i != p.getTeam().id) {
+                    if (i >= Team.all().length) i = 0;
+                    if (!Vars.state.teams.get(Team.all()[i]).cores.isEmpty()) {
+                        p.setTeam(Team.all()[i]);
+                        break;
+                    }
+                    i++;
+                }
+			}
             Log.info(p.name);
             prevTeam=p.getTeam();
             teamCount++;
